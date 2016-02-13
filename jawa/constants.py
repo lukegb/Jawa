@@ -169,13 +169,89 @@ class ConstantNameAndType(Constant):
 class ConstantMethodHandle(Constant):
     TAG = 15
 
+    REF_getField = 1
+    REF_getStatic = 2
+    REF_putField = 3
+    REF_putStatic = 4
+    REF_invokeVirtual = 5
+    REF_invokeStatic = 6
+    REF_invokeSpecial = 7
+    REF_newInvokeSpecial = 8
+    REF_invokeInterface = 9
+
+    def __init__(self, pool, index, reference_kind, reference_index):
+        super(ConstantMethodHandle, self).__init__(pool, index)
+        self._reference_kind = reference_kind
+        self._reference_index = reference_index
+        assert self.REF_getField <= self._reference_kind <= self.REF_invokeInterface
+
+    @property
+    def reference(self):
+        # perform a sanity check
+        ref = self.pool.get(self._reference_index)
+        kind = self._reference_kind
+        if kind in (1, 2, 3, 4):
+            assert isinstance(ref, ConstantFieldRef)
+        elif kind in (5, 6, 7, 8):
+            assert isinstance(ref, ConstantMethodRef)
+        elif kind == 9:
+            assert isinstance(ref, ConstantInterfaceMethodRef)
+
+        if kind in (5, 6, 7, 9):
+            assert '<clinit>' not in ref.name_and_type.name.value
+            assert '<init>' not in ref.name_and_type.name.value
+        elif kind == 8:
+            assert '<init>' in ref.name_and_type.name.value
+
+        return ref
+
+    def __repr__(self):
+        return 'ConstantMethodHandle(reference={0!r})'.format(self.reference)
+
 
 class ConstantMethodType(Constant):
     TAG = 16
 
+    def __init__(self, pool, index, descriptor_index):
+        super(ConstantMethodType, self).__init__(pool, index)
+        self._descriptor_index = descriptor_index
+
+    @property
+    def descriptor(self):
+        # perform a sanity check
+        ref = self.pool.get(self._descriptor_index)
+
+        assert isinstance(ref, ConstantUTF8)
+
+        return ref
+
+    def __repr__(self):
+        return 'ConstantMethodType(descriptor={0!r})'.format(self.descriptor)
+
 
 class ConstantInvokeDynamic(Constant):
     TAG = 18
+
+    def __init__(self, pool, index, bootstrap_method_attr_index, name_and_type_index):
+        super(ConstantInvokeDynamic, self).__init__(pool, index)
+        self._bootstrap_method_attr_index = bootstrap_method_attr_index
+        self._name_and_type_index = name_and_type_index
+
+    @property
+    def bootstrap_method(self):
+        # TODO(lukegb): this should do something
+        raise NotImplementedError
+
+    @property
+    def name_and_type(self):
+        ref = self.pool.get(self._name_and_type_index)
+
+        assert isinstance(ref, ConstantNameAndType)
+
+        return ref
+
+    def __repr__(self):
+        return 'ConstantInvokeDynamic(bootstrap_method={0!r}, name_and_type={1!r})'.format("NOTIMPLEMENTED", self.name_and_type)
 
 
 _constant_types = (
@@ -513,6 +589,26 @@ class ConstantPool(object):
                     constant.TAG,
                     constant._name_index,
                     constant._descriptor_index
+                ))
+            elif isinstance(constant, ConstantMethodHandle):
+                write(pack(
+                    '>BBH',
+                    constant.TAG,
+                    constant._reference_kind,
+                    constant._reference_index
+                ))
+            elif isinstance(constant, ConstantMethodType):
+                write(pack(
+                    '>BH',
+                    constant.TAG,
+                    constant._descriptor_index
+                ))
+            elif isinstance(constant, ConstantInvokeDynamic):
+                write(pack(
+                    '>BHH',
+                    constant.TAG,
+                    constant._bootstrap_method_attr_index,
+                    constant._name_and_type_index
                 ))
 
     @property

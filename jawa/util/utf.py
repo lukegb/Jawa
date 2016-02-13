@@ -79,4 +79,4 @@ def encode_modified_utf8(u):
                 (0x80 | (0x3F & c))
             )
 
-    return str(final_string)
+    return binary_type(final_string)
