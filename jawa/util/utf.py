@@ -8,6 +8,8 @@ when parsing and writing JVM ClassFiles or object serialization archives.
     for MUTF-8/CESU-8 into the python core.
 """
 
+from six import text_type, binary_type, unichr
+
 
 def decode_modified_utf8(s):
     """
@@ -18,7 +20,7 @@ def decode_modified_utf8(s):
     :returns: A unicode representation of the original string.
     """
     s = bytearray(s)
-    final_string = unicode()
+    final_string = text_type()
     ix = 0
     while ix < len(s):
         x = s[ix]
@@ -59,7 +61,7 @@ def encode_modified_utf8(u):
     """
     # Trying to encode a non-unicode string will result in some serious
     # abnormalities.
-    assert(isinstance(u, unicode))
+    assert(isinstance(u, text_type))
     final_string = bytearray()
 
     for c in [ord(char) for char in u]:

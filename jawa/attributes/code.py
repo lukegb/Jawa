@@ -4,6 +4,7 @@ __all__ = ('CodeAttribute', 'CodeException')
 from struct import unpack, pack
 from itertools import repeat
 from collections import namedtuple
+from six import PY3
 
 from jawa.attribute import Attribute, AttributeTable
 from jawa.util.bytecode import (
@@ -11,10 +12,13 @@ from jawa.util.bytecode import (
     write_instruction
 )
 
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from StringIO import StringIO
+if PY3:
+    from io import BytesIO as StringIO
+else:
+    try:
+        from cStringIO import StringIO
+    except ImportError:
+        from StringIO import StringIO
 
 
 CodeException = namedtuple('CodeException', [
