@@ -13,7 +13,10 @@ __all__ = (
     'ConstantFloat',
     'ConstantLong',
     'ConstantDouble',
-    'ConstantNameAndType'
+    'ConstantNameAndType',
+    'ConstantMethodHandle',
+    'ConstantMethodType',
+    'ConstantInvokeDynamic'
 )
 
 from struct import unpack, pack
@@ -25,6 +28,7 @@ class Constant(object):
     """
     The base class for all ``Constant*`` types.
     """
+
     def __init__(self, pool, index):
         self._pool = pool
         self._index = index
@@ -162,6 +166,18 @@ class ConstantNameAndType(Constant):
             self.name, self.descriptor)
 
 
+class ConstantMethodHandle(Constant):
+    TAG = 15
+
+
+class ConstantMethodType(Constant):
+    TAG = 16
+
+
+class ConstantInvokeDynamic(Constant):
+    TAG = 18
+
+
 _constant_types = (
     None,
     ConstantUTF8,
@@ -175,7 +191,13 @@ _constant_types = (
     ConstantFieldRef,
     ConstantMethodRef,
     ConstantInterfaceMethodRef,
-    ConstantNameAndType
+    ConstantNameAndType,
+    None,
+    None,
+    ConstantMethodHandle,
+    ConstantMethodType,
+    None,
+    ConstantInvokeDynamic
 )
 
 
@@ -192,7 +214,13 @@ _constant_fmts = (
     ('>HH', 4),
     ('>HH', 4),
     ('>HH', 4),
-    ('>HH', 4)
+    ('>HH', 4),
+    None,
+    None,
+    ('>BH', 3),
+    ('>H', 2),
+    None,
+    ('>HH', 4),
 )
 
 
